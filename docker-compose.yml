@@ -1,0 +1,86 @@
+version: "3.8"
+
+services:
+
+  # DJANGO SERVICE
+  service:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: backend_service
+    command: python manage.py runserver 0.0.0.0:8000
+    env_file:
+      - .env
+    volumes:
+      - ./:/code
+    ports:
+      - '8000:8000'
+    networks:
+      proxy:
+        aliases:
+          - backend_service
+
+  # REDIS
+  redis:
+    container_name: redis
+    image: "redis:latest"
+    ports:
+      - "6379:6379"
+    restart: "no"
+    networks:
+      proxy:
+        aliases:
+          - redis
+
+  # POSTGRES
+  postgres:
+    container_name: postgres
+    image: "postgres:13.3-alpine"
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgresql.conf:/etc/postgresql.conf
+      - ./pg-data:/var/lib/postgresql/data
+      - ./databases:/databases
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      retries: 5
+    restart: "no"
+    networks:
+      proxy:
+        aliases:
+          - postgres
+
+  # PGADMIN
+  postgres-admin:
+    container_name: postgres_admin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+       - pgadmin:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    restart: unless-stopped
+    networks:
+      proxy:
+        aliases:
+          - postgres_admin
+
+networks:
+  proxy:
+    external: true
+    name: network
+
+volumes:
+  postgres:
+  pgadmin:

@@ -1,0 +1,15 @@
+.git
+.gitignore
+.cache
+.docker
+
+**/*.class
+*.md
+!README*.md
+
+*/__pycache__/
+**/__pycache__/
+
+.env/
+.venv/
+venv/

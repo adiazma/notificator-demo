@@ -1,0 +1,10 @@
+psycopg2-binary>=2.8
+Django
+django-celery-beat
+django-celery-results
+django-cors-headers
+django-environ
+django-extensions
+django-timezone-field
+redis
+django_redis
